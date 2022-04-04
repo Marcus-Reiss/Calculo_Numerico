@@ -6,39 +6,53 @@ using namespace std;
 class threeMethods {
     private:
         float xkme1, xk, xkm1;
+        float fxk, aux;
         float erromax, err;
         float v_erro[25];
         float d;
         int cont, j;
         int resp;
     public:
-        threeMethods (float x0, float errom) {
-            xk = x0;
-            erromax = errom;
+        threeMethods () {
+            menu();
+            if (resp != 3) {
+                cout << "x0: ";
+                cin >> xk;
+            } else {
+                cout << "x0: ";
+                cin >> xkme1;
+                cout << endl << "x1: ";
+                cin >> xk;
+            }
+            cout << endl << "erromax: ";
+            cin >> erromax;
         }
 
         void menu () {
             cout << "Escolha o metodo:" << endl;
             cout << endl << "MENU" << endl;
             cout << "[1] Iteracao linear" << "\t" << 
-            "[2] Metodo de Newton" << endl << ">> ";
+            "[2] Metodo de Newton" << "\t" <<
+            "[3] Metodo das secantes" << endl << ">> ";
             cin >> resp;
         }
 
-        void calcula () {
+        void calcula () {            
             if (resp == 1) 
                 xkm1 = phi();
             else if (resp == 2)
-                xkm1 = xk - func()/deriv();                 
+                xkm1 = xk - func(true)/deriv();
+            else if (resp == 3)
+                xkm1 = (func(true)*xkme1 - func(false)*xk)/(func(true) - func(false));                 
         } 
 
-        float ins () {                
+        float ins () {                           
             cont = 0;    
             do {
                 calcula();
                 err = erro();
                 v_erro[cont] = err;        
-                if (err < erromax) {            
+                if (err < erromax) {                               
                     return (xkm1);
                     break;
                 }
@@ -47,8 +61,14 @@ class threeMethods {
             } while (err > erromax);
         }
 
-        float func () {
-            return (pow(xk, 2) - xk - 2);  // x^2 - x - 2
+        float func (bool opa) {
+            aux = xk;
+            if (!opa)
+                xk = xkme1;
+            fxk = pow(xk, 2) - xk - 2;  // x^2 - x - 2
+            //fxk = sqrt(xk) - 5*exp(-xk);
+            xk = aux;
+            return (fxk);
         }
 
         float phi () { // x = x^3 + x^2 - 0.5
@@ -94,15 +114,10 @@ class threeMethods {
 };
 
 int main () {
-    float root, x0, errom;
-    cout << "x0: ";
-    cin >> x0;
-    cout << endl << "errom: ";
-    cin >> errom;
+    float root;
 
-    threeMethods obj(x0, errom);    
-
-    obj.menu();
+    threeMethods obj;
+    
     root = obj.ins();
     cout << endl << "raiz: " << root << endl;
     
