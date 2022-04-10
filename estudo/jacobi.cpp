@@ -9,7 +9,9 @@ private:
     float A[3][3], A1, A2, A3;
     float l[3], co[3];
     int k = 0;
-    float x[3], erromax;
+    float x[3], xm[3], erromax;
+    float dif[3], num, den;
+    float err, errl[20];
     bool heyA;    
 public:
     jacobi () {
@@ -111,13 +113,54 @@ public:
             }
             cout << endl << "Erromax: ";
             cin >> erromax;
-        }        
+        }
+        jacobi_richardson();        
+    }
+
+    float erro () {
+        for (int i = 0; i < 3; i++) 
+            dif[i] = abs(xm[i] - x[i]);
+        num = max(max(dif[0], dif[1]), dif[2]);
+        den = max(max(abs(xm[0]), abs(xm[1])), abs(xm[2]));
+        return (num/den);
+    }
+
+    void jacobi_richardson () {
+        k = 0;
+        do {
+            xm[0] = (-1)*A[0][1]*x[1] + (-1)*A[0][2]*x[2] + d[0];
+            xm[1] = (-1)*A[1][0]*xm[0] + (-1)*A[1][2]*x[2] + d[1];
+            xm[2] = (-1)*A[2][0]*xm[0] + (-1)*A[2][1]*xm[1] + d[2];
+            err = erro();
+            errl[k] = err;
+            if (err < erromax)
+                break;
+            for (int i = 0; i < 3; i++) 
+                x[i] = xm[i];
+            k++;            
+        } while (err > erromax);
+    }
+
+    void imp_root () {
+        cout << endl << "Raiz: " << "(";
+        for (int i = 0; i < 3; i++)
+            cout << xm[i] << ", ";
+        cout << ")" << endl;
+    }
+
+    void imp_erro () {
+        cout << endl << "Erros:" << endl;
+        for (int i = 0; i < k; i++) 
+            cout << "e" << i + 1 << ": " << errl[i] << endl;
+        cout << endl;
     }
 };
 
 int main () {
     jacobi obj;
     obj.imp_A();
+    obj.imp_root();
+    obj.imp_erro();
 
     system("pause");
     return 0;
