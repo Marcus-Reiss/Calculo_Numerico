@@ -7,8 +7,9 @@ class jacobi {
 private:
     float a[3], b[3], c[3], d[3];
     float A[3][3], A1, A2, A3;
-    float l[3], co[3];
+    float l[3], co[3], beta[3];
     int k = 0;
+    int resp;
     float x[3], xm[3], erromax;
     float dif[3], num, den;
     float err, errl[20];
@@ -41,8 +42,9 @@ public:
             A[i][1] = b[i];
         for (int i = 0; i < 3; i++) 
             A[i][2] = c[i];
-        nova_A(); // A asterisco        
-        conclui_A(); // Inicia (ou não) o processo              
+        nova_A(); // A asterisco
+        menu();
+        (resp == 1) ? conclui_A_1() : conclui_A_2();  // Inicia (ou não) o processo                      
     }
 
     void imp_A () {
@@ -75,8 +77,8 @@ public:
         d[2] /= A3;        
     }
 
-    bool ana_A () {
-        // Critério de linhas
+    float crit_linhas () {
+        k = 0;
         for (int i = 0; i < 3; i++) {
             l[k] = 0;
             for (int j = 0; j < 3; j++) {                
@@ -86,7 +88,10 @@ public:
             }
             k++;
         }
-        // Critério de colunas
+        return (max(max(l[0], l[1]), l[2]));
+    }
+
+    float crit_colunas () {
         k = 0;
         for (int i = 0; i < 3; i++) {
             co[k] = 0;
@@ -97,11 +102,44 @@ public:
             }
             k++;
         }
-        return (((max(max(l[0], l[1]), l[2]) < 1) || (max(max(co[0], co[1]), co[2]) < 1)) ? true : false);               
+        return (max(max(co[0], co[1]), co[2]));
     }
 
-    void conclui_A () {
-        heyA = ana_A();        
+    float crit_sassenfeld () {
+        beta[0] = abs(A[0][1]) + abs(A[0][2]);
+        beta[1] = abs(A[1][0])*beta[0] + abs(A[1][2]);
+        beta[2] = abs(A[2][0])*beta[0] + abs(A[2][1])*beta[1];
+        return (max(max(beta[0], beta[1]), beta[2]));
+    }
+
+    bool ana_jacobi () {        
+        return (((crit_linhas() < 1) || (crit_colunas() < 1)) ? true : false);               
+    }
+
+    bool ana_gauss () {
+        return ((crit_linhas() < 1) || (crit_sassenfeld() < 1) ? true : false);
+    }
+
+    void menu () {
+        cout << endl << "Escolha o metodo iterativo:" << endl;
+        cout << "[1] Jacobi-Richardson" << "\t" << "[2] Gauss-Seidel" << endl;
+        cout << ">> ";
+        cin >> resp;
+    }
+
+    void conclui_A_1 () {
+        heyA = ana_jacobi();        
+        conclui();
+        jacobi_richardson();        
+    }
+
+    void conclui_A_2 () {
+        heyA = ana_gauss();
+        conclui();
+        gauss_seidel();
+    }
+
+    void conclui () {
         if (!heyA) 
             cout << endl << "O metodo DIVERGE !" << endl;
         else {
@@ -114,7 +152,6 @@ public:
             cout << endl << "Erromax: ";
             cin >> erromax;
         }
-        jacobi_richardson();        
     }
 
     float erro () {
@@ -125,7 +162,23 @@ public:
         return (num/den);
     }
 
-    void jacobi_richardson () {
+    void jacobi_richardson () { 
+        k = 0;
+        do {
+            xm[0] = (-1)*A[0][1]*x[1] + (-1)*A[0][2]*x[2] + d[0];
+            xm[1] = (-1)*A[1][0]*x[0] + (-1)*A[1][2]*x[2] + d[1];
+            xm[2] = (-1)*A[2][0]*x[0] + (-1)*A[2][1]*x[1] + d[2];
+            err = erro();
+            errl[k] = err;
+            k++;
+            if (err < erromax)
+                break;
+            for (int i = 0; i < 3; i++) 
+                x[i] = xm[i];            
+        } while (err > erromax);
+    }
+
+    void gauss_seidel () {
         k = 0;
         do {
             xm[0] = (-1)*A[0][1]*x[1] + (-1)*A[0][2]*x[2] + d[0];
@@ -133,11 +186,11 @@ public:
             xm[2] = (-1)*A[2][0]*xm[0] + (-1)*A[2][1]*xm[1] + d[2];
             err = erro();
             errl[k] = err;
+            k++;
             if (err < erromax)
                 break;
             for (int i = 0; i < 3; i++) 
-                x[i] = xm[i];
-            k++;            
+                x[i] = xm[i];                        
         } while (err > erromax);
     }
 
